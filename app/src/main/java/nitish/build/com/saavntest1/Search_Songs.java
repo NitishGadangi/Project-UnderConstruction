@@ -101,8 +101,14 @@ public class Search_Songs extends AppCompatActivity {
                 avl.show();
                 try {
                     JSONObject songJson = new JSONObject(searchList.getString(position));
-                    String dataID = songJson.getString("id");
                     String dataType = songJson.getString("type").toUpperCase();
+                    String dataID;
+                    if(dataType.equals("SONG")){
+                        dataID = songJson.getString("url");
+                        dataID= DataHandlers.getSongID(dataID);
+                    }
+                    else
+                        dataID = songJson.getString("id");
                     Intent toSongList=new Intent(getApplicationContext(),Album_Song_List.class);
                     toSongList.putExtra("TYPE",dataType);
                     toSongList.putExtra("TYPE_ID",dataID);

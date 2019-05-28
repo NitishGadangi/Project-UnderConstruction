@@ -1,8 +1,10 @@
 package nitish.build.com.saavntest1;
 
 import android.Manifest;
+import android.app.AlertDialog;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -87,13 +89,29 @@ public class Album_Song_List extends AppCompatActivity {
         tv_TypeTot=findViewById(R.id.tv_typetot);
         img_album=findViewById(R.id.img_album);
 
+        if (dataType.equals("FAILED")){
+            new AlertDialog.Builder(Album_Song_List.this)
+                    .setTitle("No Album or Playlist Found")
+                    .setMessage("Please use another way to find the Song you want to downoad..!")
+                    .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            onBackPressed();
+                        }
+                    })
+                    .setIcon(android.R.drawable.ic_dialog_alert)
+                    .setCancelable(false)
+                    .show();
+            jsonData="{}";
+        }
+
+
+        if (dataType.equals("SONG"))
+            dataType="ALBUM";
+
         if (dataType.equals("ALBUM"))
             jsonData=DataHandlers.getAlbumJson(albumID);
         else if (dataType.equals("PLAYLIST"))
             jsonData=DataHandlers.getPlaylistJson(albumID);
-
-
-
 
 
         Log.i("OLDJSON",jsonData);
@@ -313,6 +331,7 @@ public class Album_Song_List extends AppCompatActivity {
             TextView songName= convertView.findViewById(R.id.cus_songName);
             TextView artists = convertView.findViewById(R.id.cus_artist);
             TextView duration = convertView.findViewById(R.id.cus_duration);
+            Log.i("STYP",Integer.toString(position));
 
             try {
                 songObj =songArr.getJSONObject(position);

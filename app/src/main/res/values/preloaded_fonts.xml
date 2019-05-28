@@ -3,7 +3,10 @@
     <array name="preloaded_fonts" translatable="false">
         <item>@font/abel</item>
         <item>@font/acme</item>
+        <item>@font/advent_pro</item>
+        <item>@font/advent_pro_medium</item>
         <item>@font/capriola</item>
+        <item>@font/jockey_one</item>
         <item>@font/secular_one</item>
     </array>
 </resources>

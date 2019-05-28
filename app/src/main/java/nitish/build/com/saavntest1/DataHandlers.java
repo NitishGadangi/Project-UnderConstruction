@@ -134,6 +134,25 @@ public class DataHandlers {
 
     }
 
+    static String getSongID(String url){
+        String resID =getSongAlbumID(url);
+        return resID;
+    }
+
+    static String getDirectID(String url){
+        String linkType=getLinkType(url);
+        Log.i("STYP",linkType);
+        if (linkType.equals("FAILED"))
+            return "FAILED";
+        if (linkType.equals("ALBUM"))
+            return getAlbumID(url);
+        if (linkType.equals("PLAYLIST"))
+            return getPlaylistID(url);
+        if (linkType.equals("SONG"))
+            return getSongID(url);
+        return "FAILED";
+    }
+
     static String getDownloadLink(JSONObject songJsn) throws JSONException {
 
         String downUrl = songJsn.getString("media_preview_url");
@@ -165,21 +184,32 @@ public class DataHandlers {
         JSONObject fullJson = new JSONObject(jsonData);
         JSONObject albumsJson = new JSONObject(fullJson.getString("albums"));
         JSONObject playlistsJson = new JSONObject(fullJson.getString("playlists"));
-
+        JSONObject songlistsJson = new JSONObject(fullJson.getString("songs"));
 
         Log.i("SEDATA_AL",albumsJson.getString("data"));
         Log.i("SEDATA_PL",playlistsJson.getString("data"));
 
-        String al=albumsJson.getString("data"),pl=playlistsJson.getString("data");
+        String al=albumsJson.getString("data"),pl=playlistsJson.getString("data"),
+                sl=songlistsJson.getString("data");
+        al = al.replace("[","").replace("]","");
+        pl = pl.replace("[","").replace("]","");
+        sl = sl.replace("[","").replace("]","");
+
+        if (al.length()!=0)
+            al=","+al;
+        if (pl.length()!=0)
+            pl=","+pl;
+        if (sl.length()!=0)
+            sl=","+sl;
+
         String tempResJson="";
-        if(pl.equals("[]"))
-            tempResJson="["+al.substring(1,al.length()-1)+"]";
-        else if(al.equals("[]"))
-            tempResJson="["+pl.substring(1,pl.length()-1)+"]";
-        else {
-            al = al.replace("[","").replace("]","");
-            pl = pl.replace("[","").replace("]","");
-            tempResJson = "[" + al+ "," + pl + "]";
+
+        tempResJson = "["+ sl + al + pl + "]";
+        int tempIndex=tempResJson.indexOf(",");
+        tempResJson=tempResJson.substring(0,tempIndex)+tempResJson.substring(tempIndex+1);
+        if (tempResJson.contains(",,")){
+            tempIndex=tempResJson.indexOf(",,");
+            tempResJson=tempResJson.substring(0,tempIndex)+tempResJson.substring(tempIndex+1);
         }
 
         bigLog("SEDATA_FL",tempResJson);
@@ -212,13 +242,17 @@ public class DataHandlers {
     }
 
     static String getLinkType(String url){
-        String albumId=getAlbumID(url);
-        String playlistId=getPlaylistID(url);
-        if(!(albumId.equals("FAILED"))){
+        if(url.length()<=40)
+            return "FAILED";
+        String temp=url.substring(0,40);
+        temp=temp.toLowerCase();
+        if(temp.contains("album"))
             return "ALBUM";
-        }else if(!(playlistId.equals("FAILED"))){
+        else if (temp.contains("song"))
+            return "SONG";
+        String playlistID=getPlaylistID(url);
+        if (!(playlistID.equals("FAILED")))
             return "PLAYLIST";
-        }
         return "FAILED";
     }
 
@@ -235,10 +269,22 @@ public class DataHandlers {
         }catch (Exception e){
             return 200;
         }
-
-
-
     }
+
+    static String getSongAlbumID(String songUrl){
+        String resID = "FAILED";
+        String data=getContent(songUrl);
+        String selector ="<meta property=\"music:album\" content=\"";
+        data=data.substring(data.indexOf("<meta property=\"music:album\""));
+        data=data.substring(0,data.indexOf("\"/>"));
+        data=data.replace(selector,"");
+        if (data.contains("album")){
+            resID=getAlbumID(data);
+        }
+        Log.i("SURL",resID);
+        return resID;
+    }
+
 
 
 }

@@ -1,6 +1,7 @@
 package nitish.build.com.saavntest1;
 
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -8,17 +9,28 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
+
+import org.w3c.dom.Text;
 
 public class SaavnWebView extends AppCompatActivity {
     WebView webView;
     ProgressDialog progressDialog;
+    TextView tv_link;
+    Button btn_Download,tv_found;
+    String curUrl,songType;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_saavn_web_view);
         webView=findViewById(R.id.webView);
+        tv_link=findViewById(R.id.tv_test_link);
+        tv_found=findViewById(R.id.btn_found);
+        btn_Download=findViewById(R.id.btn_downloadSongs);
+
 
         startWebView("https://www.jiosaavn.com/");
 
@@ -27,11 +39,33 @@ public class SaavnWebView extends AppCompatActivity {
                 progressDialog.show();
                 if (progress == 100) {
                     progressDialog.dismiss();
+                    curUrl=webView.getUrl();
+                    tv_link.setText(curUrl);
+                    songType=DataHandlers.getLinkType(curUrl);
+                    if(songType.equals("FAILED")){
+                        btn_Download.setVisibility(View.INVISIBLE);
+                        tv_found.setText(R.string.downloads_not_founds);
+                    }else {
+                        btn_Download.setVisibility(View.VISIBLE);
+                        tv_found.setText(R.string.downloads_found);
+                    }
 
                 } else {
                     progressDialog.show();
 
                 }
+            }
+        });
+
+        btn_Download.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                progressDialog.show();
+                Intent toDownloadList = new Intent(getApplicationContext(),Album_Song_List.class);
+                String typeID=DataHandlers.getDirectID(curUrl);
+                toDownloadList.putExtra("TYPE_ID",typeID);
+                toDownloadList.putExtra("TYPE",songType);
+                startActivity(toDownloadList);
             }
         });
     }

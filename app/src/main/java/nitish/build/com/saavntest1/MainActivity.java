@@ -1,9 +1,13 @@
 package nitish.build.com.saavntest1;
 
 import android.Manifest;
+import android.app.AlertDialog;
+
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.support.v4.app.ActivityCompat;
+
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -70,10 +74,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 finUrl = et_url.getText().toString();
-                resID=DataHandlers.getPlaylistID(finUrl);
-                if(resID.equals("FAILED"))
-                resID=DataHandlers.getAlbumID(finUrl);
                 resName=DataHandlers.getLinkType(finUrl);
+                resID=DataHandlers.getDirectID(finUrl);
                 tv_Album_ID.setText(resID);
                 tv_Album_Name.setText(resName);
 
@@ -104,14 +106,14 @@ public class MainActivity extends AppCompatActivity {
         btn_AVLshow.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                avi.show();
+
             }
         });
 
         btn_AVlhide.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                avi.hide();
+
             }
         });
 
