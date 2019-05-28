@@ -40,6 +40,20 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <com.wang.avi.AVLoadingIndicatorView
+        android:id="@+id/AVL_loading"
+        style="@style/AVLoadingIndicatorView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        app:indicatorName="LineScalePartyIndicator"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tv_urResStatus" />
+
     <ListView
         android:id="@+id/list_searchres"
         android:layout_width="0dp"
@@ -48,5 +62,23 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tv_urResStatus" />
+
+    <TextView
+        android:id="@+id/tv_urResStatus"
+        android:layout_width="0dp"
+        android:layout_height="35dp"
+        android:layout_marginTop="16dp"
+        android:background="@android:color/white"
+        android:fontFamily="@font/capriola"
+        android:gravity="center|left"
+        android:paddingLeft="20dp"
+        android:text="Your Search Results:"
+        android:textColor="@color/darkAccent"
+        android:textSize="15sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/et_searchBox" />
+
+
 </android.support.constraint.ConstraintLayout>

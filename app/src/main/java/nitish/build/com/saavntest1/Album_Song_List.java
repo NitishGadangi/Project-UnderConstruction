@@ -4,6 +4,8 @@ import android.Manifest;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Build;
 import android.os.Environment;
 import android.os.StrictMode;
@@ -18,6 +20,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -32,6 +35,7 @@ import com.downloader.OnStartOrResumeListener;
 import com.downloader.PRDownloader;
 import com.downloader.PRDownloaderConfig;
 import com.downloader.Progress;
+import com.wang.avi.AVLoadingIndicatorView;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -45,23 +49,49 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.text.DecimalFormat;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Album_Song_List extends AppCompatActivity {
-    String albumID,jsonData,finUrl,downUrl,downpath,fName,folderName="RandomAlbum",chanelId="test1";
+    String albumID,jsonData,finUrl,downUrl,downpath,fName,folderName="RandomAlbum",
+            chanelId="test1",dataType,dot=" • ",url_img="FAILED";
     JSONArray songArr ;
     JSONObject songObj;
     int listSize=1,notificationID=100;
-    Long percentP= Long.valueOf(0);
+    Long totMB,curMB;
+    AVLoadingIndicatorView avl;
+    TextView tv_ALPLname,tv_artists,tv_TypeTot;
+    ImageView img_album;
+    DecimalFormat f = new DecimalFormat("##.00");
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_album__song__list);
 
+        avl=findViewById(R.id.AVL_ALBUM_LOADING);
+        Button btn_back=findViewById(R.id.btn_back);
+        btn_back.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onBackPressed();
+            }
+        });
+
         Intent fromHoome = getIntent();
-        albumID = fromHoome.getStringExtra("ALBUM_ID");
-        jsonData=DataHandlers.getAlbumJson(albumID);
+        albumID = fromHoome.getStringExtra("TYPE_ID");
+        dataType=fromHoome.getStringExtra("TYPE");
+
+        tv_ALPLname=findViewById(R.id.tv_ALPLname);
+        tv_artists=findViewById(R.id.tv_artists);
+        tv_TypeTot=findViewById(R.id.tv_typetot);
+        img_album=findViewById(R.id.img_album);
+
+        if (dataType.equals("ALBUM"))
+            jsonData=DataHandlers.getAlbumJson(albumID);
+        else if (dataType.equals("PLAYLIST"))
+            jsonData=DataHandlers.getPlaylistJson(albumID);
+
 
 
 
@@ -70,6 +100,17 @@ public class Album_Song_List extends AppCompatActivity {
         try {
             JSONObject albumJson = new JSONObject(jsonData);
             Log.i("JSONDATA",albumJson.toString());
+            if (dataType.equals("ALBUM")){
+                tv_artists.setText(albumJson.getString("primary_artists"));
+                tv_ALPLname.setText(albumJson.getString("title"));
+            }
+            else{
+                tv_artists.setText(albumJson.getString("follower_count")+" followers");
+                tv_ALPLname.setText(albumJson.getString("listname"));
+            }
+            url_img=albumJson.getString("image");
+            if(url_img.length()<=5)
+                url_img="FAILED";
             songArr = new JSONArray(albumJson.getString("songs"));
             Log.i("SONGARR",songArr.toString());
             listSize = songArr.length();
@@ -77,6 +118,59 @@ public class Album_Song_List extends AppCompatActivity {
         } catch (JSONException e) {
             e.printStackTrace();
         }
+
+        tv_TypeTot.setText(dataType+dot+listSize+" Songs");
+        File imgFile = new  File(DataHandlers.makeDir("cache")+"/"+tv_ALPLname.getText()+".jpg");
+        if(dataType.equals("ALBUM") && imgFile.exists()){
+            Toast.makeText(Album_Song_List.this, "SET", Toast.LENGTH_SHORT).show();
+            Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
+            img_album.setImageBitmap(myBitmap);
+        }else{
+        PRDownloader.download(url_img, DataHandlers.makeDir("cache"), tv_ALPLname.getText()+".jpg")
+                .build()
+                .setOnStartOrResumeListener(new OnStartOrResumeListener() {
+                    @Override
+                    public void onStartOrResume() {
+                        Toast.makeText(Album_Song_List.this, "START_IMG", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setOnPauseListener(new OnPauseListener() {
+                    @Override
+                    public void onPause() {
+
+                    }
+                })
+                .setOnCancelListener(new OnCancelListener() {
+                    @Override
+                    public void onCancel() {
+
+                    }
+                })
+                .setOnProgressListener(new OnProgressListener() {
+                    @Override
+                    public void onProgress(Progress progress) {
+
+                    }
+                })
+                .start(new OnDownloadListener() {
+                    @Override
+                    public void onDownloadComplete() {
+                        File imgFile = new  File(DataHandlers.makeDir("cache")+"/"+tv_ALPLname.getText()+".jpg");
+//                        Log.i("IMGPATH1",imgFile.exists());
+                        Log.i("IMGPATH2",imgFile.getAbsolutePath());
+                        if(imgFile.exists()){
+                            Toast.makeText(Album_Song_List.this, "SET", Toast.LENGTH_SHORT).show();
+                            Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
+                            img_album.setImageBitmap(myBitmap);
+                        }
+                    }
+
+                    @Override
+                    public void onError(Error error) {
+
+                    }
+                });}
+
 
 
         ListView song_list =findViewById(R.id.song_list);
@@ -90,6 +184,8 @@ public class Album_Song_List extends AppCompatActivity {
                 .setConnectTimeout(30_000)
                 .build();
         PRDownloader.initialize(getApplicationContext(), config);
+
+
 
         File directory = new File(Environment.getExternalStorageDirectory()+ "/Saavn_Downloader/");
         if (!directory.exists())
@@ -119,6 +215,7 @@ public class Album_Song_List extends AppCompatActivity {
                     Log.i("SJSON",songJsn.toString());
                     folderName = DataHandlers.getAlbumName(songJsn);
                     fName=songJsn.getString("song")+".m4a";
+                    notificationID=DataHandlers.generateNotificationID(songJsn.getString("id"));
                     downUrl=DataHandlers.getDownloadLink(songJsn);
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -159,11 +256,12 @@ public class Album_Song_List extends AppCompatActivity {
                             public void onProgress(Progress progress) {
                                 Log.i("CURDEMO",Long.toString(progress.currentBytes));
                                 Log.i("TOTDEMO",Long.toString(progress.totalBytes));
-                                percentP =  ((progress.currentBytes/progress.totalBytes)*100);
+                                totMB=progress.totalBytes/1048576;
+                                curMB=progress.currentBytes/1048576;
 
                               mBuilder.setProgress((int)progress.totalBytes,(int) progress.currentBytes,false);
                               notificationManagerCompat.notify(notificationID,mBuilder.build());
-                              mBuilder.setContentText(percentP+"%");
+                              mBuilder.setContentText(f.format(curMB)+"MB/"+f.format(totMB)+"MB");
                               notificationManagerCompat.notify(notificationID,mBuilder.build());
 
                             }
@@ -187,15 +285,6 @@ public class Album_Song_List extends AppCompatActivity {
 
             }
         });
-
-
-
-
-
-
-
-
-
     }
 
     class CustomAdapter extends BaseAdapter {
@@ -223,14 +312,19 @@ public class Album_Song_List extends AppCompatActivity {
 
             TextView songName= convertView.findViewById(R.id.cus_songName);
             TextView artists = convertView.findViewById(R.id.cus_artist);
+            TextView duration = convertView.findViewById(R.id.cus_duration);
 
             try {
                 songObj =songArr.getJSONObject(position);
                 songName.setText(songObj.getString("song"));
-                artists.setText(songObj.getString("primary_artists"));
+                artists.setText(songObj.getString("album")+dot+
+                        songObj.getString("primary_artists"));
+                duration.setText(DataHandlers.getSongDuration(songObj));
             } catch (JSONException e) {
                 e.printStackTrace();
             }
+            if (position==(listSize-1))
+                avl.hide();
 
 
             return convertView;

@@ -1,40 +1,17 @@
 package nitish.build.com.saavntest1;
 
 import android.Manifest;
-import android.app.Notification;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.os.Build;
-import android.os.StrictMode;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationManagerCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import com.wang.avi.AVLoadingIndicatorView;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -72,6 +49,9 @@ public class MainActivity extends AppCompatActivity {
         Button btn_Download_list = findViewById(R.id.btn_songlist);
         Button btn_testSearch=findViewById(R.id.btn_testNotif);
         Button btn_testWeb=findViewById(R.id.btn_test2);
+        Button btn_AVLshow=findViewById(R.id.btn_AVL_show);
+        Button btn_AVlhide=findViewById(R.id.btn_AVL_Hide);
+
 
         btn_testSearch.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -90,8 +70,10 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 finUrl = et_url.getText().toString();
+                resID=DataHandlers.getPlaylistID(finUrl);
+                if(resID.equals("FAILED"))
                 resID=DataHandlers.getAlbumID(finUrl);
-
+                resName=DataHandlers.getLinkType(finUrl);
                 tv_Album_ID.setText(resID);
                 tv_Album_Name.setText(resName);
 
@@ -102,7 +84,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent toSongList = new Intent(getApplicationContext(),Album_Song_List.class);
-                toSongList.putExtra("ALBUM_ID",resID);
+                toSongList.putExtra("TYPE_ID",resID);
+                toSongList.putExtra("TYPE",resName);
                 startActivity(toSongList);
             }
         });
@@ -112,6 +95,23 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Intent toSaavnWeb = new Intent(getApplicationContext(),SaavnWebView.class);
                 startActivity(toSaavnWeb);
+            }
+        });
+
+        AVLoadingIndicatorView avi=findViewById(R.id.AVLloader);
+        avi.hide();
+
+        btn_AVLshow.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                avi.show();
+            }
+        });
+
+        btn_AVlhide.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                avi.hide();
             }
         });
 
