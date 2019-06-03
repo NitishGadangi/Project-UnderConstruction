@@ -1,13 +1,37 @@
 package nitish.build.com.saavntest1;
 
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.AsyncTask;
 import android.os.Environment;
 import android.os.StrictMode;
 import android.util.Log;
+import android.widget.Toast;
+
+
+import com.downloader.Error;
+import com.downloader.OnCancelListener;
+import com.downloader.OnDownloadListener;
+import com.downloader.OnPauseListener;
+import com.downloader.OnProgressListener;
+import com.downloader.OnStartOrResumeListener;
+import com.downloader.PRDownloader;
+import com.downloader.Progress;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.jaudiotagger.audio.AudioFile;
+import org.jaudiotagger.audio.AudioFileIO;
+import org.jaudiotagger.tag.FieldDataInvalidException;
+import org.jaudiotagger.tag.FieldKey;
+import org.jaudiotagger.tag.Tag;
+import org.jaudiotagger.tag.images.Artwork;
+import org.jaudiotagger.tag.images.ArtworkFactory;
+import org.jaudiotagger.tag.mp4.Mp4FieldKey;
+import org.jaudiotagger.tag.mp4.Mp4Tag;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -18,10 +42,14 @@ import org.jsoup.select.Elements;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.RandomAccessFile;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+
 
 public class DataHandlers {
     static String albumApiLink="https://www.jiosaavn.com/api.php?_format=json&__call=content.getAlbumDetails&albumid=",
@@ -49,11 +77,11 @@ public class DataHandlers {
                 sb.append(line + "\n");
 
             finString = sb.toString(); // Result is here
-            Log.i("HTTP",finString);
+
 
             is.close(); // Close the stream
         }catch (Exception e){
-            Log.i("Exception",e.toString());
+            e.printStackTrace();
         }
         return finString;
     }
@@ -89,7 +117,7 @@ public class DataHandlers {
             String tempData = element.toString();
             tempData = tempData.substring(tempData.indexOf("['albumid','"),tempData.indexOf("'])"));
             tempData=tempData.replace("['albumid','","");
-            Log.i("ALlog",tempData);
+
             resID=tempData;
         }catch (Exception e){
             resID="FAILED";
@@ -118,13 +146,13 @@ public class DataHandlers {
 
         Elements element = doc.select(".flip-layout");
         data=element.toString();
-        Log.i("PLlog",element.toString());
+
         try {
             data=data.substring(data.indexOf("<"),data.indexOf(">")+1);
             data=data.substring(data.indexOf("data-listid=\""),data.indexOf("\">")+1);
             data=data.replace("data-listid=\"","");
             data=data.replace("\"","");
-            Log.i("PLlog2",data);
+
             resID=data;
             resID=resID.replace(" ","");
             return resID;
@@ -141,7 +169,7 @@ public class DataHandlers {
 
     static String getDirectID(String url){
         String linkType=getLinkType(url);
-        Log.i("STYP",linkType);
+
         if (linkType.equals("FAILED"))
             return "FAILED";
         if (linkType.equals("ALBUM"))
@@ -153,10 +181,18 @@ public class DataHandlers {
         return "FAILED";
     }
 
-    static String getDownloadLink(JSONObject songJsn) throws JSONException {
+    static String getDownloadLink(JSONObject songJsn,String kbps) throws JSONException {
 
         String downUrl = songJsn.getString("media_preview_url");
+        if (kbps.equals("320"))
         downUrl=downUrl.replace("96_p.mp4","320.mp4");
+        else if (kbps.equals("160"))
+            downUrl=downUrl.replace("96_p.mp4","160.mp4");
+        else if (kbps.equals("96"))
+            downUrl=downUrl.replace("96_p.mp4","96.mp4");
+        else
+            downUrl=downUrl.replace("96_p.mp4","160.mp4");
+
         downUrl=downUrl.replace("preview","aac");
 
         return downUrl;
@@ -177,17 +213,16 @@ public class DataHandlers {
     }
 
     static String getSearchResult(String query) throws JSONException {
-        Log.i("SEDATA","I am here");
+
         String jsonData=getContent(searchApiLink+query);
         jsonData=jsonData.substring(jsonData.indexOf("{"));
-        Log.i("SEDATA",jsonData);
+
         JSONObject fullJson = new JSONObject(jsonData);
         JSONObject albumsJson = new JSONObject(fullJson.getString("albums"));
         JSONObject playlistsJson = new JSONObject(fullJson.getString("playlists"));
         JSONObject songlistsJson = new JSONObject(fullJson.getString("songs"));
 
-        Log.i("SEDATA_AL",albumsJson.getString("data"));
-        Log.i("SEDATA_PL",playlistsJson.getString("data"));
+
 
         String al=albumsJson.getString("data"),pl=playlistsJson.getString("data"),
                 sl=songlistsJson.getString("data");
@@ -206,28 +241,23 @@ public class DataHandlers {
 
         tempResJson = "["+ sl + al + pl + "]";
         int tempIndex=tempResJson.indexOf(",");
+
+        if(tempIndex<1)
+            return "[]";
         tempResJson=tempResJson.substring(0,tempIndex)+tempResJson.substring(tempIndex+1);
         if (tempResJson.contains(",,")){
             tempIndex=tempResJson.indexOf(",,");
             tempResJson=tempResJson.substring(0,tempIndex)+tempResJson.substring(tempIndex+1);
         }
 
-        bigLog("SEDATA_FL",tempResJson);
+
 
         if(tempResJson.length()>3){
             return tempResJson;
         }
         return "[]";
     }
-    static void bigLog(String TAG, String message) {
-        int maxLogSize = 1500;
-        for(int i = 0; i <= message.length() / maxLogSize; i++) {
-            int start = i * maxLogSize;
-            int end = (i+1) * maxLogSize;
-            end = end > message.length() ? message.length() : end;
-            Log.i(TAG+""+i, message.substring(start, end));
-        }
-    }
+
 
     static String getSongDuration(JSONObject songJson) throws JSONException {
         String durStr =songJson.getString("duration");
@@ -281,10 +311,104 @@ public class DataHandlers {
         if (data.contains("album")){
             resID=getAlbumID(data);
         }
-        Log.i("SURL",resID);
+
         return resID;
     }
 
+//    static void setTags() throws TagException, CannotReadException, InvalidAudioFrameException, IOException, CannotWriteException {
+//        String ALBUM_N="NITISH";
+//        String YEAR="2019",
+//                ARTISTS="NITISH",
+//                ALBUM_ARTISTS="aA_NITISH",
+//                COMPOSER="comNITISH";
+//
+//        File albdirectory = new File(Environment.getExternalStorageDirectory()+ "/Saavn_Downloader/"+"test.m4a");
+//        File img_art = new File(Environment.getExternalStorageDirectory()+ "/Saavn_Downloader/"+"Luka Chuppi-2019"+"/"+"testart.jpg");
+//        String absPath=albdirectory.getAbsolutePath();
+//        if (albdirectory.exists()){
+//            AudioFile audioFile= AudioFileIO.read(albdirectory);
+//            final AudioHeader audioHeader = audioFile.getAudioHeader();
+//
+//
+//            Tag tag = audioFile.getTag().or(NullTag.INSTANCE);
 
+//            final String title = tag.getValue(FieldKey.TITLE).or("");
+//            if ("".equals(title)) {
+//                if (tag == NullTag.INSTANCE) {
+//                    // there was no tag. set a new default tag for the file type
+//                    tag = audioFile.setNewDefaultTag();
+//                }
+//            }
+//            tag.setField(FieldKey.ORIGINAL_ALBUM,ALBUM_N);
+//            tag.setField(FieldKey.YEAR,YEAR);
+//            tag.setField(FieldKey.ARTISTS,ARTISTS);
+//            tag.setField(FieldKey.ALBUM_ARTISTS,ALBUM_ARTISTS);
+//            tag.setField(FieldKey.COMPOSER,COMPOSER);
+//            final ImmutableSet<FieldKey> supportedFields = tag.getSupportedFields();
+//            if (supportedFields.contains(FieldKey.COVER_ART)) {
+
+//                if (img_art.exists()){
+
+//                    Artwork artwork= ArtworkFactory.createArtworkFromFile(img_art);
+//                    tag.deleteArtwork();
+//                    tag.setArtwork(artwork);
+//
+
+//                }
+//            }
+//            audioFile.save();
+//        }
+//    }
+
+//    static void setTags2(String absPath,String tempJson) throws Exception {
+//        JSONObject songJson = new JSONObject(tempJson);
+//        if(songJson.toString().contains("song")) {
+//            String ALBUM_N = songJson.getString("album");
+//            String YEAR = songJson.getString("year"),
+//                    ARTIST = songJson.getString("primary_artists"),
+//                    ALBUM_ARTISTS = songJson.getString("singers"),
+//                    COMPOSER = songJson.getString("music"),
+//                    DESCR = songJson.getString("starring"),
+//                    COPYR = songJson.getString("copyright_text"),
+//                    url_img=songJson.getString("image");
+//
+//            File albdirectory = new File(absPath);
+
+//            AudioFile audioFile = AudioFileIO.read(albdirectory);
+//            Mp4Tag mp4tag = (Mp4Tag) audioFile.getTag();
+//            mp4tag.setField(Mp4FieldKey.ALBUM, ALBUM_N);
+//            mp4tag.setField(Mp4FieldKey.ARTIST, ARTIST);
+//            mp4tag.setField(Mp4FieldKey.ALBUM_ARTIST, ALBUM_ARTISTS);
+//            mp4tag.setField(Mp4FieldKey.DAY, YEAR);
+//            mp4tag.setField(Mp4FieldKey.COMPOSER, COMPOSER);
+//            mp4tag.setField(Mp4FieldKey.DESCRIPTION, DESCR);
+//            mp4tag.setField(Mp4FieldKey.COPYRIGHT, COPYR);
+//
+//
+//            url_img=url_img.replace("150x150.jpg","500x500.jpg");
+//            File img_art = new File(Environment.getExternalStorageDirectory() + "/Saavn_Downloader/" + ALBUM_N+"-"+YEAR + "/" + "albumArt.jpg");
+//
+
+//            Artwork artwork = ArtworkFactory.createArtworkFromFile(img_art);
+//            mp4tag.setField(artwork);
+//
+//            RandomAccessFile imageFile = new RandomAccessFile(img_art, "r");
+//            byte[] imagedata = new byte[(int) imageFile.length()];
+//            imageFile.read(imagedata);
+//            mp4tag.createArtworkField(imagedata);
+//
+//
+//
+////        mp4tag.setField(Mp4FieldKey.);
+//            audioFile.commit();
+
+//
+//        }
+//    }
+
+
+    static void makeDownloads(){
+
+    }
 
 }

@@ -1,5 +1,7 @@
 package nitish.build.com.saavntest1;
 
+import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -7,6 +9,7 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.Button;
@@ -27,6 +30,7 @@ public class Search_Songs extends AppCompatActivity {
     int listSize=0;
     JSONArray searchList;
     ListView resList ;
+    ProgressDialog progressDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,9 +39,14 @@ public class Search_Songs extends AppCompatActivity {
 
         EditText et_SearchBox=findViewById(R.id.et_searchBox);
         Button btn_search=findViewById(R.id.btn_searchBox);
-        AVLoadingIndicatorView avl = findViewById(R.id.AVL_loading);
-        avl.hide();
+
         resList =findViewById(R.id.list_searchres);
+        resList.setVisibility(View.GONE);
+
+        progressDialog = new ProgressDialog(Search_Songs.this);
+        progressDialog.setMessage("Loading...");
+        progressDialog.dismiss();
+        TextView tv_ins = findViewById(R.id.tv_ins);
 
 
         TextView tv_resStatus=findViewById(R.id.tv_urResStatus);
@@ -45,11 +54,17 @@ public class Search_Songs extends AppCompatActivity {
         btn_search.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
+                View view = getCurrentFocus();
+                if (view != null) {
+                    InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+                }
                 query=et_SearchBox.getText().toString();
                 query=query.replace(" ", "");
                 tv_resStatus.setText("search for ..."+query+"...");
                 resList.setVisibility(View.INVISIBLE);
-                avl.show();
+
                 try {
                     if(query.length()==0){
                         tv_resStatus.setText("Type something and press Search button..");
@@ -59,20 +74,18 @@ public class Search_Songs extends AppCompatActivity {
                         tv_resStatus.setText("No matches found for :"+query);
 
                     }else{
-                    Log.i("SEARR1",searchRes);
+
                     searchList = new JSONArray(searchRes);
-                    Log.i("SEARR2",searchList.toString());
+
                     listSize=searchList.length();
-                    Log.i("SEARR3",listSize+"L");
+
 
                     tv_resStatus.setText("Found: "+listSize+" Matches");
                     CustomAdapter customAdapter = new CustomAdapter();
                     resList.setAdapter(customAdapter);
                     resList.setVisibility(View.VISIBLE);
+                    tv_ins.setVisibility(View.GONE);
                     }}
-
-
-                    avl.hide();
 
 
                 } catch (JSONException e) {
@@ -86,7 +99,11 @@ public class Search_Songs extends AppCompatActivity {
             public boolean onKey(View v, int keyCode, KeyEvent event) {
                 if ((event.getAction() == KeyEvent.ACTION_DOWN) &&
                         (keyCode == KeyEvent.KEYCODE_ENTER)) {
-                    // Perform action on key press
+                    View view = getCurrentFocus();
+                    if (view != null) {
+                        InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+                        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+                    }
                     btn_search.callOnClick();
                     return true;
                 }
@@ -98,7 +115,7 @@ public class Search_Songs extends AppCompatActivity {
         resList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                avl.show();
+                progressDialog.show();
                 try {
                     JSONObject songJson = new JSONObject(searchList.getString(position));
                     String dataType = songJson.getString("type").toUpperCase();
@@ -112,6 +129,7 @@ public class Search_Songs extends AppCompatActivity {
                     Intent toSongList=new Intent(getApplicationContext(),Album_Song_List.class);
                     toSongList.putExtra("TYPE",dataType);
                     toSongList.putExtra("TYPE_ID",dataID);
+                    toSongList.putExtra("PREV_ACT","SEARCH_ACT");
                     startActivity(toSongList);
 
                 } catch (JSONException e) {
@@ -126,7 +144,6 @@ public class Search_Songs extends AppCompatActivity {
 
         @Override
         public int getCount() {
-            //Log.i("Countaaaa",Integer.toString(COURSES.length));
             //Toast.makeText(syllabus_select_course.this, COURSES.length, Toast.LENGTH_SHORT).show();
             return (listSize);
         }
@@ -172,5 +189,18 @@ public class Search_Songs extends AppCompatActivity {
 
             return convertView;
         }
+    }
+
+    public void sBtmSrch(View v){
+//        startActivity(new Intent(getApplicationContext(),Search_Songs.class));
+    }
+    public void sBtmBrws(View v){
+        startActivity(new Intent(getApplicationContext(),SaavnWebView.class));
+    }
+    public void sBtmDown(View v){
+        startActivity(new Intent(getApplicationContext(),Downloads_Page.class));
+    }
+    public void sBtmMore(View v){
+        startActivity(new Intent(getApplicationContext(),MorePage.class));
     }
 }

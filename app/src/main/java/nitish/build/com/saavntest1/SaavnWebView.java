@@ -65,6 +65,7 @@ public class SaavnWebView extends AppCompatActivity {
                 String typeID=DataHandlers.getDirectID(curUrl);
                 toDownloadList.putExtra("TYPE_ID",typeID);
                 toDownloadList.putExtra("TYPE",songType);
+                toDownloadList.putExtra("PREV_ACT","WEB_ACT");
                 startActivity(toDownloadList);
             }
         });
@@ -105,5 +106,18 @@ public class SaavnWebView extends AppCompatActivity {
             }
         });
         webView.loadUrl(url);
+    }
+
+    public void wBtmSrch(View v){
+        startActivity(new Intent(getApplicationContext(),Search_Songs.class));
+    }
+    public void wBtmBrws(View v){
+//        startActivity(new Intent(getApplicationContext(),SaavnWebView.class));
+    }
+    public void wBtmDown(View v){
+        startActivity(new Intent(getApplicationContext(),Downloads_Page.class));
+    }
+    public void wBtmMore(View v){
+        startActivity(new Intent(getApplicationContext(),MorePage.class));
     }
 }
