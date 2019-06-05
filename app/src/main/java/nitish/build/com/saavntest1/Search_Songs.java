@@ -1,8 +1,12 @@
 package nitish.build.com.saavntest1;
 
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -19,6 +23,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+
 import com.wang.avi.AVLoadingIndicatorView;
 
 import org.json.JSONArray;
@@ -31,6 +36,13 @@ public class Search_Songs extends AppCompatActivity {
     JSONArray searchList;
     ListView resList ;
     ProgressDialog progressDialog;
+
+    private boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +59,17 @@ public class Search_Songs extends AppCompatActivity {
         progressDialog.setMessage("Loading...");
         progressDialog.dismiss();
         TextView tv_ins = findViewById(R.id.tv_ins);
+
+        if (!isNetworkAvailable()){
+            new AlertDialog.Builder(Search_Songs.this)
+                    .setTitle("Not Connected to internet?")
+                    .setMessage("This app requires active internet connetion otherwise there is a fair chance for app crash.")
+                    .setPositiveButton("Ok",null)
+                    .setIcon(android.R.drawable.ic_dialog_alert)
+                    .setCancelable(false)
+                    .show();
+
+        }
 
 
         TextView tv_resStatus=findViewById(R.id.tv_urResStatus);

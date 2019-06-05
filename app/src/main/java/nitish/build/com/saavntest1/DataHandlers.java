@@ -19,15 +19,17 @@ import com.downloader.OnStartOrResumeListener;
 import com.downloader.PRDownloader;
 import com.downloader.Progress;
 
+
+
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
+
+
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
-import org.jaudiotagger.tag.FieldDataInvalidException;
 import org.jaudiotagger.tag.FieldKey;
-import org.jaudiotagger.tag.Tag;
 import org.jaudiotagger.tag.images.Artwork;
 import org.jaudiotagger.tag.images.ArtworkFactory;
 import org.jaudiotagger.tag.mp4.Mp4FieldKey;
@@ -360,51 +362,49 @@ public class DataHandlers {
 //        }
 //    }
 
-//    static void setTags2(String absPath,String tempJson) throws Exception {
-//        JSONObject songJson = new JSONObject(tempJson);
-//        if(songJson.toString().contains("song")) {
-//            String ALBUM_N = songJson.getString("album");
-//            String YEAR = songJson.getString("year"),
-//                    ARTIST = songJson.getString("primary_artists"),
-//                    ALBUM_ARTISTS = songJson.getString("singers"),
-//                    COMPOSER = songJson.getString("music"),
-//                    DESCR = songJson.getString("starring"),
-//                    COPYR = songJson.getString("copyright_text"),
+    static void setTags2(String absPath,String tempJson) throws Exception {
+        Log.i("SETG","here");
+        JSONObject songJson = new JSONObject(tempJson);
+        if(songJson.toString().contains("song")) {
+            String ALBUM_N = songJson.getString("album");
+            String YEAR = songJson.getString("year"),
+                    ARTIST = songJson.getString("primary_artists"),
+                    ALBUM_ARTISTS = songJson.getString("singers"),
+                    COMPOSER = songJson.getString("music"),
+                    DESCR = songJson.getString("starring"),
+                    COPYR = songJson.getString("copyright_text");
 //                    url_img=songJson.getString("image");
-//
-//            File albdirectory = new File(absPath);
 
-//            AudioFile audioFile = AudioFileIO.read(albdirectory);
-//            Mp4Tag mp4tag = (Mp4Tag) audioFile.getTag();
-//            mp4tag.setField(Mp4FieldKey.ALBUM, ALBUM_N);
-//            mp4tag.setField(Mp4FieldKey.ARTIST, ARTIST);
-//            mp4tag.setField(Mp4FieldKey.ALBUM_ARTIST, ALBUM_ARTISTS);
-//            mp4tag.setField(Mp4FieldKey.DAY, YEAR);
-//            mp4tag.setField(Mp4FieldKey.COMPOSER, COMPOSER);
-//            mp4tag.setField(Mp4FieldKey.DESCRIPTION, DESCR);
-//            mp4tag.setField(Mp4FieldKey.COPYRIGHT, COPYR);
-//
-//
+            File albdirectory = new File(absPath);
+    Log.i("SETG","here");
+            AudioFile audioFile = AudioFileIO.read(albdirectory);
+            Mp4Tag mp4tag = (Mp4Tag) audioFile.getTag();
+            mp4tag.setField(Mp4FieldKey.ALBUM, ALBUM_N);
+            mp4tag.setField(Mp4FieldKey.ARTIST, ARTIST);
+            mp4tag.setField(Mp4FieldKey.ALBUM_ARTIST, ALBUM_ARTISTS);
+            mp4tag.setField(Mp4FieldKey.DAY, YEAR);
+            mp4tag.setField(Mp4FieldKey.COMPOSER, COMPOSER);
+            mp4tag.setField(Mp4FieldKey.DESCRIPTION, DESCR);
+            mp4tag.setField(Mp4FieldKey.COPYRIGHT, COPYR);
+            audioFile.commit();
+
 //            url_img=url_img.replace("150x150.jpg","500x500.jpg");
-//            File img_art = new File(Environment.getExternalStorageDirectory() + "/Saavn_Downloader/" + ALBUM_N+"-"+YEAR + "/" + "albumArt.jpg");
-//
+            File img_art = new File(Environment.getExternalStorageDirectory() + "/Saavn_Downloader/" + ALBUM_N+"-"+YEAR + "/" + "albumArt.jpg");
 
-//            Artwork artwork = ArtworkFactory.createArtworkFromFile(img_art);
-//            mp4tag.setField(artwork);
-//
+
+            Artwork artwork = ArtworkFactory.createArtworkFromFile(img_art);
+            mp4tag.setField(artwork);
+
 //            RandomAccessFile imageFile = new RandomAccessFile(img_art, "r");
 //            byte[] imagedata = new byte[(int) imageFile.length()];
 //            imageFile.read(imagedata);
 //            mp4tag.createArtworkField(imagedata);
-//
-//
-//
-////        mp4tag.setField(Mp4FieldKey.);
-//            audioFile.commit();
 
-//
-//        }
-//    }
+            audioFile.commit();
+
+
+        }
+    }
 
 
     static void makeDownloads(){
