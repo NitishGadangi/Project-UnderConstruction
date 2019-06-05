@@ -15,7 +15,13 @@ So I decided why not make an app, so that ever one can enjoy it. and this app is
 * Search Songs directly from Saavn Database with Search feature.
 * (Experimental)Browse songs using Saavn Web ui.
 
-[![Download Button]()](https://www.mediafire.com/file/75434z2tfyl6kd3/Freemium_Music_v0.2Beta.apk/file)
+### Few ScreenShots:
+
+![Screen Shots](https://github.com/NitishGadangi/Project-UnderConstruction/blob/master/screen_shots.png?raw=true)
+
+### Download from here:
+
+[![](https://github.com/NitishGadangi/Project-UnderConstruction/blob/master/click_here.png?raw=true)](https://www.mediafire.com/file/75434z2tfyl6kd3/Freemium_Music_v0.2Beta.apk/file)
 
 ### Things to consider:
 * The app is still in beta. So having bugs is common. If you found any bug, please report it here [Telegram Group](https://t.me/joinchat/HH4B2xFVtt6_2hbJl_qKQA).
