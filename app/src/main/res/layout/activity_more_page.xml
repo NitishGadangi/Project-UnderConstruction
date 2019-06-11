@@ -252,4 +252,14 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/textView19" />
 
+    <Button
+        android:id="@+id/button2"
+        android:layout_width="200dp"
+        android:layout_height="50dp"
+        android:layout_marginBottom="24dp"
+        android:background="@drawable/buy_me_cofee"
+        app:layout_constraintBottom_toTopOf="@+id/textView20"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
 </android.support.constraint.ConstraintLayout>

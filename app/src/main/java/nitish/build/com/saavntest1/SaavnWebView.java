@@ -2,8 +2,10 @@ package nitish.build.com.saavntest1;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
@@ -30,6 +32,7 @@ public class SaavnWebView extends AppCompatActivity {
         tv_link=findViewById(R.id.tv_test_link);
         tv_found=findViewById(R.id.btn_found);
         btn_Download=findViewById(R.id.btn_downloadSongs);
+        btn_Download.setVisibility(View.GONE);
 
 
         startWebView("https://www.jiosaavn.com/");
@@ -41,14 +44,15 @@ public class SaavnWebView extends AppCompatActivity {
                     progressDialog.dismiss();
                     curUrl=webView.getUrl();
                     tv_link.setText(curUrl);
-                    songType=DataHandlers.getLinkType(curUrl);
-                    if(songType.equals("FAILED")){
-                        btn_Download.setVisibility(View.INVISIBLE);
-                        tv_found.setText(R.string.downloads_not_founds);
-                    }else {
-                        btn_Download.setVisibility(View.VISIBLE);
-                        tv_found.setText(R.string.downloads_found);
-                    }
+//                    songType=DataHandlers.getLinkType(curUrl);
+                    new SetDownloadButton().execute(curUrl);
+//                    if(songType.equals("FAILED")){
+//                        btn_Download.setVisibility(View.INVISIBLE);
+//                        tv_found.setText(R.string.downloads_not_founds);
+//                    }else {
+//                        btn_Download.setVisibility(View.VISIBLE);
+//                        tv_found.setText(R.string.downloads_found);
+//                    }
 
                 } else {
                     progressDialog.show();
@@ -60,16 +64,88 @@ public class SaavnWebView extends AppCompatActivity {
         btn_Download.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                progressDialog.show();
-                Intent toDownloadList = new Intent(getApplicationContext(),Album_Song_List.class);
-                String typeID=DataHandlers.getDirectID(curUrl);
-                toDownloadList.putExtra("TYPE_ID",typeID);
-                toDownloadList.putExtra("TYPE",songType);
-                toDownloadList.putExtra("PREV_ACT","WEB_ACT");
-                startActivity(toDownloadList);
+                Log.i("ASY_WE","a"+songType);
+//                progressDialog.show();
+//                Intent toDownloadList = new Intent(getApplicationContext(),Album_Song_List.class);
+//                String typeID=DataHandlers.getDirectID(curUrl);
+//                toDownloadList.putExtra("TYPE_ID",typeID);
+//                toDownloadList.putExtra("TYPE",songType);
+//                toDownloadList.putExtra("PREV_ACT","WEB_ACT");
+//                startActivity(toDownloadList);
+
+                new StartIntentToAlbum().execute(curUrl);
+
             }
         });
     }
+
+    public class SetDownloadButton extends AsyncTask<String,Void,String>{
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            progressDialog.show();
+            tv_found.setText("Processing Please wait...");
+        }
+        @Override
+        protected String doInBackground(String... strings) {
+            return DataHandlers.getLinkType(strings[0]);
+        }
+        @Override
+        protected void onProgressUpdate(Void... values) {
+            super.onProgressUpdate(values);
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            songType = s;
+            if(s.equals("FAILED")){
+                btn_Download.setVisibility(View.GONE);
+                tv_found.setText(R.string.downloads_not_founds);
+            }else {
+                btn_Download.setVisibility(View.VISIBLE);
+                tv_found.setText(R.string.downloads_found);
+            }
+
+            progressDialog.dismiss();
+
+        }
+    }
+
+    public class StartIntentToAlbum extends AsyncTask<String,Void,String>{
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            progressDialog.show();
+        }
+
+        @Override
+        protected String doInBackground(String... strings) {
+            return DataHandlers.getDirectID(strings[0]);
+        }
+
+        @Override
+        protected void onProgressUpdate(Void... values) {
+            super.onProgressUpdate(values);
+            progressDialog.show();
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            Intent toDownloadList = new Intent(getApplicationContext(),Album_Song_List.class);
+            toDownloadList.putExtra("TYPE_ID",s);
+            Log.i("ASY_WE","a"+songType);
+            toDownloadList.putExtra("TYPE",songType);
+            toDownloadList.putExtra("PREV_ACT","WEB_ACT");
+            progressDialog.dismiss();
+            startActivity(toDownloadList);
+
+        }
+
+
+    }
+
     private void startWebView(String url) {
 
         WebSettings settings = webView.getSettings();

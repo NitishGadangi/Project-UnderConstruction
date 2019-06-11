@@ -22,6 +22,8 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.Button;
@@ -272,6 +274,14 @@ public class Album_Song_List extends AppCompatActivity {
         song_list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            //---------------------            Animation Part      ---------------------------//
+                Animation animation1 = new AlphaAnimation(0.3f, 1.0f);
+                animation1.setDuration(1000);
+                view.startAnimation(animation1);
+            //-----------------------------------------------------------------------------//
+
+
+
                 JSONObject songJsn = null;
                 String tempID=null;
                 String kbps = findViewById(kbpsGroup.getCheckedRadioButtonId()).getTag().toString();
@@ -384,6 +394,8 @@ public class Album_Song_List extends AppCompatActivity {
             }
             }
         });
+
+
 
         FetchListener fetchListener = new FetchListener() {
             @Override

@@ -7,6 +7,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -36,6 +37,8 @@ public class Search_Songs extends AppCompatActivity {
     JSONArray searchList;
     ListView resList ;
     ProgressDialog progressDialog;
+    TextView tv_ins,tv_resStatus;
+
 
     private boolean isNetworkAvailable() {
         ConnectivityManager connectivityManager
@@ -58,7 +61,7 @@ public class Search_Songs extends AppCompatActivity {
         progressDialog = new ProgressDialog(Search_Songs.this);
         progressDialog.setMessage("Loading...");
         progressDialog.dismiss();
-        TextView tv_ins = findViewById(R.id.tv_ins);
+        tv_ins = findViewById(R.id.tv_ins);
 
         if (!isNetworkAvailable()){
             new AlertDialog.Builder(Search_Songs.this)
@@ -72,7 +75,7 @@ public class Search_Songs extends AppCompatActivity {
         }
 
 
-        TextView tv_resStatus=findViewById(R.id.tv_urResStatus);
+        tv_resStatus=findViewById(R.id.tv_urResStatus);
         tv_resStatus.setText("Your search results appear here:");
         btn_search.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -85,33 +88,35 @@ public class Search_Songs extends AppCompatActivity {
                 }
                 query=et_SearchBox.getText().toString();
                 query=query.replace(" ", "");
-                tv_resStatus.setText("search for ..."+query+"...");
+                tv_resStatus.setText("searching for \""+query+"\"...");
                 resList.setVisibility(View.INVISIBLE);
 
                 try {
                     if(query.length()==0){
                         tv_resStatus.setText("Type something and press Search button..");
                     }else{
-                    searchRes=DataHandlers.getSearchResult(query);
-                    if (searchRes.equals("[]")){
-                        tv_resStatus.setText("No matches found for :"+query);
+//                    searchRes=DataHandlers.getSearchResult(query);
+//                    if (searchRes.equals("[]")){
+//                        tv_resStatus.setText("No matches found for :"+query);
+//
+//                    }else{
+//
+//                    searchList = new JSONArray(searchRes);
+//
+//                    listSize=searchList.length();
+//
+//
+//                    tv_resStatus.setText("Found: "+listSize+" Matches");
+//                    CustomAdapter customAdapter = new CustomAdapter();
+//                    resList.setAdapter(customAdapter);
+//                    resList.setVisibility(View.VISIBLE);
+//                    tv_ins.setVisibility(View.GONE);
+//                    }
+                        new JsonSetup().execute(query);
+                    }
 
-                    }else{
 
-                    searchList = new JSONArray(searchRes);
-
-                    listSize=searchList.length();
-
-
-                    tv_resStatus.setText("Found: "+listSize+" Matches");
-                    CustomAdapter customAdapter = new CustomAdapter();
-                    resList.setAdapter(customAdapter);
-                    resList.setVisibility(View.VISIBLE);
-                    tv_ins.setVisibility(View.GONE);
-                    }}
-
-
-                } catch (JSONException e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
@@ -160,6 +165,62 @@ public class Search_Songs extends AppCompatActivity {
                 }
             }
         });
+
+
+
+    }
+
+    public  class JsonSetup extends AsyncTask<String,Void,String>{
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            progressDialog.show();
+        }
+        @Override
+        protected String doInBackground(String... strings) {
+
+            try {
+                searchRes=DataHandlers.getSearchResult(strings[0]);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            if (searchRes.equals("[]")){
+                return "FAILED";
+
+            }else{
+
+                try {
+                    searchList = new JSONArray(searchRes);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+                listSize=searchList.length();
+
+            }
+
+            return Integer.toString(listSize);
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            if (s.equals("FAILED"))
+                tv_resStatus.setText("No matches found for :"+query);
+            tv_resStatus.setText("Found: "+listSize+" Matches");
+            CustomAdapter customAdapter = new CustomAdapter();
+            resList.setAdapter(customAdapter);
+            resList.setVisibility(View.VISIBLE);
+            tv_ins.setVisibility(View.GONE);
+            progressDialog.dismiss();
+        }
+
+        @Override
+        protected void onProgressUpdate(Void... values) {
+            super.onProgressUpdate(values);
+            progressDialog.show();
+        }
+
 
     }
 

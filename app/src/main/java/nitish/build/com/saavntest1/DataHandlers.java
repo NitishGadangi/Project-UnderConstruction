@@ -157,6 +157,8 @@ public class DataHandlers {
 
             resID=data;
             resID=resID.replace(" ","");
+            if (resID.equals(""))
+                return "FAILED";
             return resID;
         }catch(Exception e){
             return resID;
@@ -278,15 +280,19 @@ public class DataHandlers {
             return "FAILED";
         String temp=url.substring(0,40);
         temp=temp.toLowerCase();
+
         if(temp.contains("album"))
             return "ALBUM";
         else if (temp.contains("song"))
             return "SONG";
         String playlistID=getPlaylistID(url);
-        if (!(playlistID.equals("FAILED")))
+
+        if (!(playlistID.equals("FAILED"))){
             return "PLAYLIST";
+        }
         return "FAILED";
     }
+
 
     static int generateNotificationID(String songId){
         int chrAscii=0;
